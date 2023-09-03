@@ -13,7 +13,7 @@ const (
 	charset    = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 )
 
-var WISDOM = []string{
+var WordsOfWisdom = []string{
 	"The only true wisdom is in knowing you know nothing.",
 	"Turn your wounds into wisdom.",
 	"Wisdom is the daughter of experience.",
@@ -39,6 +39,6 @@ func GetReward() string {
 	s := rand.NewSource(time.Now().UnixNano())
 	r := rand.New(s)
 
-	reward := WISDOM[r.Intn(len(WISDOM))]
+	reward := WordsOfWisdom[r.Intn(len(WordsOfWisdom))]
 	return reward
 }
