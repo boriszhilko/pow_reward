@@ -18,15 +18,15 @@ challenge, the server rewards them with a word of wisdom.
 
 For a quick setup and run of the Wisdom Server and Client, you can use Docker Compose.
 
-1. **Run with Docker Compose:**
+**Run with Docker Compose:**
 
-   Make sure you have Docker and Docker Compose installed. Navigate to the project root directory and execute:
+Make sure you have Docker and Docker Compose installed. Navigate to the project root directory and execute:
 
-    ```bash
-    docker-compose up
-    ```
+```bash
+docker-compose up
+```
 
-   This command will set up and run both the server and client using the configurations provided in the `docker-compose.yml` file.
+This command will set up and run both the server and client using the configurations provided in the `docker-compose.yml` file.
 
 ---
 
