@@ -1,42 +1,31 @@
-SERVER_IMAGE = wisdom-server
-CLIENT_IMAGE = wisdom-client
+.PHONY: build-server run-server build-client run-client all clean help
 
-# Docker compose default action
-.PHONY: all
-all:
-	docker-compose up
-
-# Wisdom Server Targets
-.PHONY: build-server
 build-server:
-	docker build -t $(SERVER_IMAGE) -f cmd/server/Dockerfile .
+	@docker build -t wisdom-server -f cmd/server/Dockerfile .
 
-.PHONY: run-server
-run-server: build-server
-	docker run --name $(SERVER_IMAGE) -p 8080:8080 $(SERVER_IMAGE)
+run-server:
+	-docker rm -f wisdom-server
+	@docker run --name wisdom-server -p 8080:8080 wisdom-server
 
-# Wisdom Client Targets
-.PHONY: build-client
 build-client:
-	docker build -t $(CLIENT_IMAGE) -f cmd/client/Dockerfile .
+	@docker build -t wisdom-client -f cmd/client/Dockerfile .
 
-.PHONY: run-client
-run-client: build-client
-	docker run -e SERVER_URL=wisdom-server:8080 --link $(SERVER_IMAGE) $(CLIENT_IMAGE)
+run-client:
+	-docker rm -f wisdom-client
+	@docker run --link wisdom-server --name wisdom-client -e SERVER_URL=wisdom-server:8080 wisdom-client
 
-# Clean-up
-.PHONY: clean
+all:
+	@docker-compose up
+
 clean:
-	docker container rm -f $(SERVER_IMAGE) $(CLIENT_IMAGE)
-	docker image rm $(SERVER_IMAGE) $(CLIENT_IMAGE)
+	@docker container prune -f
+	@docker image prune -f -a --filter label=stage=builder
 
-# Help
-.PHONY: help
 help:
-	@echo "Available targets:"
-	@echo "  all           - Build and run both the server and client using Docker Compose."
-	@echo "  build-server  - Build the Wisdom Server Docker image."
-	@echo "  run-server    - Run the Wisdom Server Docker container."
-	@echo "  build-client  - Build the Wisdom Client Docker image."
-	@echo "  run-client    - Run the Wisdom Client Docker container."
-	@echo "  clean         - Remove both server and client containers and images."
+	@echo "Available commands:"
+	@echo "  make build-server    - Build the server Docker image."
+	@echo "  make run-server      - Run the server Docker container."
+	@echo "  make build-client    - Build the client Docker image."
+	@echo "  make run-client      - Run the client Docker container."
+	@echo "  make all             - Use Docker Compose to set up and run both the server and client."
+	@echo "  make clean           - Remove all unused Docker containers and builder images."

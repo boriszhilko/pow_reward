@@ -10,7 +10,11 @@ import (
 const BufferSize = 256
 
 func main() {
-	listener := createServer(":8080")
+	listener, err := createServer(":8080")
+	if err != nil {
+		fmt.Println("Error creating server:", err)
+		os.Exit(1)
+	}
 	defer listener.Close()
 
 	for {
@@ -23,54 +27,66 @@ func main() {
 	}
 }
 
-func createServer(address string) net.Listener {
+func createServer(address string) (net.Listener, error) {
 	listener, err := net.Listen("tcp", address)
 	if err != nil {
-		fmt.Printf("Error listening on %s: %v\n", address, err)
-		os.Exit(1)
+		return nil, fmt.Errorf("Error listening on %s: %v", address, err)
 	}
 	fmt.Printf("Listening on %s\n", address)
-	return listener
+	return listener, nil
 }
 
 func handleConnection(conn net.Conn) {
 	defer conn.Close()
 
-	challenge := sendChallenge(conn)
-	response := receiveResponse(conn)
+	if err := interactWithClient(conn); err != nil {
+		fmt.Println("Error during client interaction:", err)
+	}
+}
+
+func interactWithClient(conn net.Conn) error {
+	challenge, err := sendChallenge(conn)
+	if err != nil {
+		return err
+	}
+
+	response, err := receiveResponse(conn)
+	if err != nil {
+		return err
+	}
 
 	isCorrect := pow.VerifySolution(challenge, response)
-	sendFeedback(conn, isCorrect)
+	return sendFeedback(conn, isCorrect)
 }
 
-func sendChallenge(conn net.Conn) string {
+func sendChallenge(conn net.Conn) (string, error) {
 	challenge := pow.GetChallenge(10)
-	conn.Write([]byte(challenge))
-	return challenge
+	_, err := conn.Write([]byte(challenge))
+	if err != nil {
+		return "", err
+	}
+	return challenge, nil
 }
 
-func receiveResponse(conn net.Conn) string {
+func receiveResponse(conn net.Conn) (string, error) {
 	buffer := make([]byte, BufferSize)
 	n, err := conn.Read(buffer)
 	if err != nil {
-		fmt.Printf("Error reading response: %v\n", err)
-		return ""
+		return "", err
 	}
-	return string(buffer[:n])
+	return string(buffer[:n]), nil
 }
 
-func sendFeedback(conn net.Conn, isCorrect bool) {
+func sendFeedback(conn net.Conn, isCorrect bool) error {
 	if isCorrect {
-		sendRandomReward(conn)
-	} else {
-		conn.Write([]byte("Incorrect PoW"))
+		return sendRandomReward(conn)
 	}
+	_, err := conn.Write([]byte("Incorrect PoW"))
+	return err
 }
 
-func sendRandomReward(conn net.Conn) {
+func sendRandomReward(conn net.Conn) error {
 	reward := pow.GetReward()
 	_, err := conn.Write([]byte(reward))
-	if err != nil {
-		fmt.Println("Error sending reward:", err)
-	}
+	return err
 }
